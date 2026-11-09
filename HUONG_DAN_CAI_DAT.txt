@@ -1,0 +1,104 @@
+HUONG DAN CAI DAT - HE THONG QUAN LY NHA KHOA 6 CHI NHANH
+
+KET QUA THIET KE
+- 1 tai khoan ADMIN TONG: xem duoc tat ca 6 chi nhanh va bao cao tong.
+- 6 tai khoan chi nhanh: moi tai khoan chi xem/sua du lieu chi nhanh duoc cap.
+- Du lieu duoc tach theo clinic_id trong database va duoc bao ve bang Row Level Security (RLS).
+- Du lieu Excel thang 11/2026 duoc nap vao CN1 (ten tam: "Chi nhanh 1 - Du lieu Excel hien tai"). CN2-CN6 khoi tao trong trang thai rong.
+- Cac chi nhanh co the doi ten trong bang clinics sau khi cai dat.
+
+BO FILE
+1. index.html: giao dien dang nhap va quan ly 6 chi nhanh.
+2. 01_schema_6_chi_nhanh_va_du_lieu.sql: tao bang, bao mat, 6 chi nhanh va nap Excel vao CN1.
+3. HUONG_DAN_CAI_DAT.txt: tai lieu nay.
+
+QUAN TRONG - CHUA PHAI WEBSITE ONLINE
+Bo file da tao ma giao dien va SQL. De dong bo that, can tao Supabase project, chay SQL, dien Project URL/anon key va host index.html len HTTPS. Chua co project hay tai khoan nao duoc tao tu dong.
+
+BUOC 1 - TAO SUPABASE PROJECT
+1. Vao https://supabase.com/dashboard va dang nhap.
+2. Bam New project.
+3. Dat ten project vi du NHA KHOA 6 CHI NHANH.
+4. Tao Database Password va luu rieng.
+5. Chon region gan Viet Nam neu co va Create new project.
+6. Cho project tao xong.
+
+BUOC 2 - TAO DATABASE VA NAP DU LIEU EXCEL
+1. Mo Supabase > SQL Editor > New query.
+2. Mo file 01_schema_6_chi_nhanh_va_du_lieu.sql bang text editor.
+3. Copy toan bo SQL, dan vao SQL Editor, bam Run.
+4. Kiem tra Table Editor: phai co clinics, profiles, clinic_sheets.
+5. Bang clinics co CN1-CN6; du lieu Excel se vao CN1. SQL dung ON CONFLICT DO NOTHING, chay lai khong ghi de sheet da nap.
+
+BUOC 3 - TAO TAI KHOAN ADMIN TONG
+1. Vao Authentication > Users > Add user > Create new user.
+2. Email ky thuat: admin@login.nhakhoa.local
+3. Dat mat khau manh. Neu co tuy chon email confirmed, danh dau confirmed. Neu Supabase bat buoc xac nhan email, tat Confirm email trong Authentication > Providers > Email (vi day la dia chi dang nhap noi bo, khong nhan thu).
+4. Sau khi tao user, mo SQL Editor va chay:
+   update public.profiles
+   set username='admin', role='super_admin', clinic_id=null, active=true
+   where id=(select id from auth.users where email='admin@login.nhakhoa.local');
+5. Tai khoan nay la ADMIN TONG.
+
+BUOC 4 - TAO 6 TAI KHOAN CHI NHANH
+Tao tung tai khoan trong Authentication > Users > Add user > Create new user.
+Dung email ky thuat va mat khau rieng nhu sau (co the thay username):
+- CN1: cn1@login.nhakhoa.local
+- CN2: cn2@login.nhakhoa.local
+- CN3: cn3@login.nhakhoa.local
+- CN4: cn4@login.nhakhoa.local
+- CN5: cn5@login.nhakhoa.local
+- CN6: cn6@login.nhakhoa.local
+
+Moi tai khoan tao xong, chay SQL tuong ung de gan dung chi nhanh. Vi du CN1:
+update public.profiles
+set username='cn1', role='branch_admin',
+    clinic_id=(select id from public.clinics where code='CN1'),
+    active=true
+where id=(select id from auth.users where email='cn1@login.nhakhoa.local');
+
+Doi CN1 thanh CN2/cn2, CN3/cn3... cho 6 tai khoan. Moi tai khoan phai co mat khau rieng, gui mat khau cho tung quan ly chi nhanh qua kenh rieng.
+Khong tao 6 tai khoan bang cung mot email. Neu tao user trong Supabase Auth ma trigger tu dong tao profile pending, cau lenh UPDATE tren se gan quyen chi nhanh.
+
+BUOC 5 - DOI TEN CAC CHI NHANH
+Vi du neu CN1 la Viet Duc 2:
+update public.clinics set name='Viet Duc 2' where code='CN1';
+update public.clinics set name='Ten chi nhanh 2' where code='CN2';
+... sua tuong tu CN3-CN6.
+Ten 6 chi nhanh da duoc cap nhat theo danh sach ban cung cap. Du lieu Excel thang 11/2026 nap vao CN1 - Nha Khoa Viet Duc Phu Hoa.
+
+BUOC 6 - CAU HINH WEB APP
+1. Mo index.html bang text editor.
+2. Tim 2 dong:
+const SUPABASE_URL="PASTE_SUPABASE_PROJECT_URL";
+const SUPABASE_ANON_KEY="PASTE_SUPABASE_ANON_KEY";
+3. Supabase > Project Settings > API. Copy Project URL va anon/public key (key co the hien ten publishable key tren giao dien moi).
+4. Dan dung URL va anon/public key vao hai dong tren.
+5. KHONG dung service_role/secret key trong HTML.
+6. Luu file.
+
+BUOC 7 - DUA WEBSITE LEN INTERNET
+Can host index.html tren mot dich vu HTTPS nhu Netlify, Vercel hoac hosting cua ban. Tai khoan hosting do ban so huu. Sau khi host, mo cung mot dia chi website tren dien thoai/may tinh va dang nhap bang username/password da tao.
+Khong chi mo file local neu muon dong bo tren nhieu may.
+
+QUYEN VA BAO MAT
+- Admin tong (super_admin): xem tat ca chi nhanh va tong hop doanh thu.
+- Tai khoan chi nhanh (branch_admin): chi doc/ghi/xoa du lieu cua chi nhanh minh; khong doc duoc chi nhanh khac do RLS.
+- Profiles va clinics co RLS. Khong chia se Database Password hay service_role key.
+- Tat dang ky cong khai trong Authentication > Settings/Providers neu khong can tu dang ky. Chi admin tao user.
+- Khi nhan vien nghi viec: dat profiles.active=false va disable user trong Authentication.
+- Can sao luu database dinh ky. Du lieu nha khoa la thong tin ca nhan, chi cap quyen cho nguoi can dung.
+
+GIOI HAN BAN HIEN TAI
+- Tai khoan duoc tao trong Supabase Dashboard; giao dien chua co man hinh admin tu tao/vo hieu hoa user.
+- Moi sheet hien dang luu payload JSON theo tung chi nhanh; chua co bao cao loc theo khoang ngay/thang va chua co nhat ky lich su tung o.
+- Tong thu/cong no lay tu cac cot trong sheet VĐ2; can doi chieu lai neu file Excel co quy uoc tinh khac.
+- Nen kiem thu RLS bang tai khoan CN1 va CN2 truoc khi nhap du lieu that.
+
+TEN CHINH THUC CAC CHI NHANH
+CN1: Nha Khoa Việt Đức Phú Hoà
+CN2: Nha Khoa Việt Đức Núi Sập
+CN3: Nha Khoa Việt Đức Óc Eo
+CN4: Nha Khoa Việt Đức Châu Phú
+CN5: Nha Khoa Việt Đức Mỹ Luông
+CN6: Nha Khoa Tâm An
